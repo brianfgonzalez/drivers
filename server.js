@@ -5,7 +5,7 @@ let moment = require('moment')
 let app = express()
 let api = require('./api/api')
 
-let port = process.env.MONGODB_URI || 3000
+let port = process.env.PORT || 3000
 
 app.use('/api', api)
 
