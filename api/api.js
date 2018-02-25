@@ -1,19 +1,14 @@
-let express = require('express')
-let _ = require('lodash')
-let moment = require('moment')
 let bodyParser = require('body-parser')
 let url = require('url')
-//const {ObjectID} = require('mongodb')
-//const bcrypt = require('bcryptjs')
 let {mongoose} = require('./db/mongoose')
 let {Driver} = require('./models/driver')
+let express = require('express')
+let router = express.Router()
+//router.use(bodyParser.json())
 
-let app = express()
+console.log('inside of the api.js')
 
-let port = process.env.MONGODB_URI || 3000
-
-app.use(bodyParser.json())
-app.get('/api/drivers', (req, res) => {
+router.get('/api/drivers', (req, res) => {
   let url_parts = url.parse(req.url,true)
   console.log(`model: ${url_parts.query.model}, mark: ${url_parts.query.mark}`)
   Driver.find({model: url_parts.query.model, mark: url_parts.query.mark})
@@ -23,7 +18,7 @@ app.get('/api/drivers', (req, res) => {
   .catch((e) => res.status(400).send(e))
 })
 
-app.get('/api/models', (req, res) => {
+router.get('/api/models', (req, res) => {
   Driver.distinct("model")
   .then((model) => {
     res.send({model})
@@ -31,7 +26,7 @@ app.get('/api/models', (req, res) => {
   .catch((e) => res.status(400).send(e))
 })
 
-app.get('/api/marks/:model', (req, res) => {
+router.get('/api/marks/:model', (req, res) => {
   Driver.find({model: req.params.model}).distinct("mark")
   .then((mark) => {
     res.send({mark})
@@ -39,4 +34,4 @@ app.get('/api/marks/:model', (req, res) => {
   .catch((e) => res.status(400).send(e))
 })
 
-module.exports = app
+module.exports = router
