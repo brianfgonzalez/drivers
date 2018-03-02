@@ -4,10 +4,160 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <script src="./js/react.development.js"></script>
+  <script src="./js/react-dom.development.js"></script>
+  <script src="./js/babel.js"></script>
+  <script src="./js/jquery-3.3.1.js"></script>
+  <title>React Document</title>
 </head>
 <body>
-  <div id="app"></div>
-  <script src="build/main.bundle.js"></script>
+  <div id="app">Not replaced yet</div>
+  <!-- <script src="build/main.bundle.js"></script> -->
+  <!-- <script src="js/index.js"></script> -->
+
+
+  <script type="text/babel">
+    class ModelDropDown extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {isLoading: true}
+      }
+      componentWillMount() {
+        fetch('http://127.0.0.1:3000/api/models')
+          .then(res => res.json())
+          .then((json) => {
+              this.setState({models: json.model, isLoading: false})
+            })
+          .catch((e) => console.log(e))
+      }
+      render() {
+        if (this.state.isLoading === false) {
+          return(
+            <form>
+              <label>Models</label>
+              <select onChange={this.props.handleModelChange} id="model-dropdown">
+                <option key="null" value="null"></option>
+                {this.state.models.map(model => <option key={model} value={model}>{model}</option>)}
+              </select>
+            </form>
+          )
+        } else {
+          return <p>select a model already...</p>
+        }
+      }
+    }
+
+    class MarkDropDown extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {
+            isLoading: true,
+            marks: []
+        }
+      }
+
+      componentWillReceiveProps(nextProps) {
+        fetch(`http://127.0.0.1:3000/api/marks/${nextProps.model}`)
+          .then(res => res.json())
+          .then((json) => {
+              this.setState({marks: json.mark}, () => {
+                this.setState({isLoading: false})
+                console.log('setting of marks state is complete for', nextProps.model)
+                }
+              )
+            })
+          .catch((e) => console.log(e))
+      }
+
+      render() {
+        console.log('in render',this.state.marks)
+        if (this.state.isLoading === false) {
+          return(
+            <form>
+              <label>Marks for {this.props.model}</label>
+              <select onChange={this.props.handleMarkChange} id="mark-dropdown">
+                <option key="null" value="null"></option>
+                {this.state.marks.map(mark => <option key={mark} value={mark}>{mark}</option>)}
+              </select>
+            </form>
+          )
+        } else {
+          return <p>Select a model already!...</p>
+        }
+      }
+    }
+
+    class DriverList extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {
+            isLoading: true,
+            drivers: []
+        }
+      }
+
+      componentWillReceiveProps(nextProps) {
+        if (nextProps.mark !== null
+            && nextProps.model !== null
+            && nextProps.mark !== undefined
+            && nextProps.model !== undefined) {
+        console.log(`fetching with this path http://127.0.0.1:3000/api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
+        fetch(`http://127.0.0.1:3000/api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
+          .then(res => res.json())
+          .then((json) => {
+              this.setState({drivers: json.driver}, () => {
+                this.setState({isLoading: false})
+                console.log(json.driver)
+                }
+              )
+            })
+          .catch((e) => console.log(e))
+        }
+      }
+
+      render() {
+        if (this.state.isLoading === false) {
+          return(
+            <ol>
+              <h2>{this.state.drivers.length} drivers for the {this.props.mark}</h2>
+                {this.state.drivers.map(driver => <li>{driver.name} - {driver.downloadUrl}</li>)}
+            </ol>
+          )
+        } else {
+          return <p>Select the Model and Mark Already!</p>
+        }
+      }
+    }
+
+    class DriverForm extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {}
+        //this.handleModelChange = this.handleModelChange.bind(this)
+      }
+      handleModelChange = (event) => {
+        this.setState({isLoading: true})
+      }
+
+      handleMarkChange = (event) => {
+        this.setState({isLoading: true})
+      }
+
+      render() {
+        return (
+          <div>
+            <ModelDropDown handleModelChange={this.handleModelChange} />
+            <MarkDropDown handleMarkChange={this.handleMarkChange} model={jQuery('#model-dropdown').val()}/>
+            <DriverList model={jQuery('#model-dropdown').val()} mark={jQuery('#mark-dropdown').val()}/>
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(
+      <DriverForm />,
+      document.getElementById('app')
+    )
+  </script>
 </body>
 </html>
