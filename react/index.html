@@ -9,6 +9,7 @@
   <script src="./js/babel.js"></script>
   <script src="./js/jquery-3.3.1.js"></script>
   <script src="https://unpkg.com/react-table@latest/react-table.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/react-table@latest/react-table.css">
   <title>React Document</title>
 </head>
@@ -169,16 +170,18 @@
         console.log('in DriverLists render')
         if (this.state.isLoading === false) {
           const columns = [{
-              Header: 'name',
+              Header: 'Driver Name',
               accessor: 'name'
             }, {
-              Header: 'Date',
-              accessor: 'postedDate'
+              Header: 'Posted Date',
+              accessor: 'postedDate',
+              Cell: props => <span className='string'>{moment(props.value).format("MMM Do YY")}</span>
             }, {
-              Header: 'size',
-              accessor: 'size'
+              Header: 'Size (mb)',
+              accessor: 'size',
+              Cell: props => <span className='number'>{Math.max( Math.round((props.value/1000000) * 10) / 10, 2.8 ).toFixed(2)}</span>
             }, {
-              Header: 'url',
+              Header: 'Direct Download Url',
               accessor: 'downloadUrl',
               Cell: props => <a href={props.value}>{props.value}</a>
             }]
@@ -186,7 +189,7 @@
             <ReactTable
               data={this.state.drivers}
               columns={columns}
-              defaultPageSize={100}
+              defaultPageSize={50}
             />
           )
         } else {
