@@ -18,15 +18,13 @@
 
   <script type="text/babel">
 
-    let url = 'https://protected-journey-97618.herokuapp.com'
-
     class ModelDropDown extends React.Component {
       constructor(props) {
         super(props)
         this.state = {isLoading: true}
       }
       componentWillMount() {
-        fetch(`${url}/api/models`)
+        fetch(`./api/models`)
           .then(res => res.json())
           .then((json) => {
               this.setState({models: json.model, isLoading: false})
@@ -60,7 +58,7 @@
       }
 
       componentWillReceiveProps(nextProps) {
-        fetch(`${url}/api/marks/${nextProps.model}`)
+        fetch(`./api/marks/${nextProps.model}`)
           .then(res => res.json())
           .then((json) => {
               this.setState({marks: json.mark}, () => {
@@ -104,8 +102,8 @@
             && nextProps.model !== null
             && nextProps.mark !== undefined
             && nextProps.model !== undefined) {
-        console.log(`fetching with this path ${url}/api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
-        fetch(`${url}/api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
+        console.log(`fetching with this path api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
+        fetch(`./api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
           .then(res => res.json())
           .then((json) => {
               this.setState({drivers: json.driver}, () => {
