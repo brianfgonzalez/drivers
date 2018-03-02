@@ -8,6 +8,8 @@
   <script src="./js/react-dom.development.js"></script>
   <script src="./js/babel.js"></script>
   <script src="./js/jquery-3.3.1.js"></script>
+  <script src="./js/react-table.min.js"></script>
+  <link rel="stylesheet" href="./css/react-table.css">
   <title>React Document</title>
 </head>
 <body>
@@ -17,6 +19,8 @@
 
 
   <script type="text/babel">
+
+    let ReactTable = window.ReactTable.default
 
     class ModelDropDown extends React.Component {
       constructor(props) {
@@ -88,8 +92,50 @@
       }
     }
 
+    class OsDropDown extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = {
+            isLoading: true,
+            operatingSystems: []
+        }
+      }
+
+      componentWillReceiveProps(nextProps) {
+        if (nextProps.mark !== undefined) {
+          fetch(`./api/operatingSystems?mark=${nextProps.mark}&model=${nextProps.model}`)
+            .then(res => res.json())
+            .then((json) => {
+                this.setState({operatingSystems: json.operatingSystem}, () => {
+                  this.setState({isLoading: false})
+                  console.log(json.operatingSystem)
+                  }
+                )
+              })
+            .catch((e) => console.log(e))
+        }
+      }
+
+      render() {
+        if (this.state.isLoading === false) {
+          return(
+            <form>
+              <label>operatingSystems for {this.props.mark}</label>
+              <select onChange={this.props.handleOsChange} id="operatingsystem-dropdown">
+                <option key="null" value="null"></option>
+                {this.state.operatingSystems.map(operatingSystem => <option key={operatingSystem} value={operatingSystem}>{operatingSystem}</option>)}
+              </select>
+            </form>
+          )
+        } else {
+          return <p>select a mark already!...</p>
+        }
+      }
+    }
+
     class DriverList extends React.Component {
       constructor(props) {
+        console.log('in DriverLists constructor')
         super(props)
         this.state = {
             isLoading: true,
@@ -98,12 +144,15 @@
       }
 
       componentWillReceiveProps(nextProps) {
+        console.log('in DriverLists componentWillReceiveProps')
         if (nextProps.mark !== null
             && nextProps.model !== null
             && nextProps.mark !== undefined
-            && nextProps.model !== undefined) {
-        console.log(`fetching with this path api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
-        fetch(`./api/drivers?mark=${nextProps.mark}&model=${nextProps.model}`)
+            && nextProps.model !== undefined
+            && nextProps.operatingSystem !== undefined
+            && nextProps.operatingSystem !== undefined) {
+        console.log(`fetching with this path api/drivers?mark=${nextProps.mark}&model=${nextProps.model}&operatingSystem=${nextProps.operatingSystem}`)
+        fetch(`./api/drivers?mark=${nextProps.mark}&model=${nextProps.model}&operatingSystem=${nextProps.operatingSystem}`)
           .then(res => res.json())
           .then((json) => {
               this.setState({drivers: json.driver}, () => {
@@ -113,19 +162,35 @@
               )
             })
           .catch((e) => console.log(e))
-        }
+        } else { console.log('undefined or null values were passed to driverlist component') }
       }
 
       render() {
+        console.log('in DriverLists render')
         if (this.state.isLoading === false) {
+          const columns = [{
+              Header: 'name',
+              accessor: 'name'
+            }, {
+              Header: 'Date',
+              accessor: 'postedDate'
+            }, {
+              Header: 'size',
+              accessor: 'size'
+            }, {
+              Header: 'url',
+              accessor: 'downloadUrl',
+              Cell: props => <a href={props.value}>{props.value}</a>
+            }]
           return(
-            <ol>
-              <h2>{this.state.drivers.length} drivers for the {this.props.mark}</h2>
-                {this.state.drivers.map(driver => <li>{driver.name} - {driver.downloadUrl}</li>)}
-            </ol>
+            <ReactTable
+              data={this.state.drivers}
+              columns={columns}
+              defaultPageSize={100}
+            />
           )
         } else {
-          return <p>Select the Model and Mark Already!</p>
+          return <p>select the model, mark and os already!</p>
         }
       }
     }
@@ -144,12 +209,17 @@
         this.setState({isLoading: true})
       }
 
+      handleOsChange = (event) => {
+        this.setState({isLoading: true})
+      }
+
       render() {
         return (
           <div>
             <ModelDropDown handleModelChange={this.handleModelChange} />
             <MarkDropDown handleMarkChange={this.handleMarkChange} model={jQuery('#model-dropdown').val()}/>
-            <DriverList model={jQuery('#model-dropdown').val()} mark={jQuery('#mark-dropdown').val()}/>
+            <OsDropDown handleOsChange={this.handleOsChange} model={jQuery('#model-dropdown').val()} mark={jQuery('#mark-dropdown').val()}/>
+            <DriverList model={jQuery('#model-dropdown').val()} mark={jQuery('#mark-dropdown').val()} operatingSystem={jQuery('#operatingsystem-dropdown').val()} />
           </div>
         )
       }
